@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Statistics</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Solar Energy Statistics for {{ user.username }}</h1>
+    <h2>Add Record</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add Record</button>
+    </form>
+    <h2>Records</h2>
+    <table>
+        <tr>
+            <th>Month</th>
+            <th>Year</th>
+            <th>Power Generated (kWh)</th>
+            <th>County</th>
+            <th>orientation</th>
+            <th>Panels Power (kWh)</th>
+            <th>Inverter Power (kWh)</th>
+            <th>Input Date</th>
+            <th>Actions</th>
+        </tr>
+        {% for record in records %}
+        <tr>
+            <td>{{ record.month }}</td>
+            <td>{{ record.year }}</td>
+            <td>{{ record.power_generated }}</td>
+            <td>{{ record.county }}</td>
+            <td>{{ record.orientation }}</td>
+            <td>{{ record.panels_size }}</td>
+            <td>{{ record.inverter_size }}</td>
+            <td>{{ record.input_date }}</td>
+            <td>
+                <a href="{% url 'edit_record' record.id %}">Edit</a> |
+                <a href="{% url 'delete_record' record.id %}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

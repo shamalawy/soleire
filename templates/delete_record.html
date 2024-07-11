@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Record</title>
+</head>
+<body>
+    <h2>Are you sure you want to delete this record?</h2>
+    <p>Month: {{ record.month }}</p>
+    <p>Power Generated: {{ record.power_generated }} kWh</p>
+    <p>County: {{ record.county }}</p>
+    <p>Input Date: {{ record.input_date }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit">Yes, delete</button>
+    </form>
+    <p><a href="{% url 'user_statistics' %}">Cancel</a></p>
+</body>
+</html>

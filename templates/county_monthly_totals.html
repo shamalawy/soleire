@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>County Monthly Totals</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Total Power Generated per County for {{ selected_month }} {{ selected_year }}</h1>
+    
+    <form method="get">
+        <label for="month">Select Month:</label>
+        <select id="month" name="month" onchange="this.form.submit()">
+            {% for month in months %}
+                <option value="{{ month }}" {% if month == selected_month %}selected{% endif %}>{{ month }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="year">Select Year:</label>
+        <select id="year" name="year" onchange="this.form.submit()">
+            {% for year in years %}
+                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+    </form>
+
+    <canvas id="myChart" width="400" height="180"></canvas>
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const data = {
+            labels: [
+                {% for record in monthly_totals %}
+                    '{{ record.county }}',
+                {% endfor %}
+            ],
+            datasets: [{
+                label: 'Total Power Generated (kWh)',
+                data: [
+                    {% for record in monthly_totals %}
+                        {{ record.total_power }},
+                    {% endfor %}
+                ],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const config = {
+            type: 'bar',
+            data: data,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        };
+
+        new Chart(ctx, config);
+    </script>
+</body>
+</html>

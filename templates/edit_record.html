@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Record</title>
+</head>
+<body>
+    <h2>Edit Record</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Save Changes</button>
+    </form>
+    <p><a href="{% url 'user_statistics' %}">Cancel</a></p>
+</body>
+</html>
