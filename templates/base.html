@@ -1,0 +1,67 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}soleire{% endblock %}</title>
+<meta name="description" content="{% block description %}Anonymous solar generation statistics contributed by panel owners across Ireland.{% endblock %}">
+<meta name="robots" content="{% block robots %}index, follow{% endblock %}">
+<link rel="stylesheet" href="{% static 'css/soleire.css' %}">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>&#9728;</text></svg>">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="shell">
+    <a class="brand" href="{% url 'home' %}">
+      <span class="brand-mark" aria-hidden="true">☀</span>
+      <span>soleire</span>
+      <span class="brand-sub">Irish solar, measured together</span>
+    </a>
+    <nav class="primary" aria-label="Primary">
+      <a href="{% url 'home' %}" {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}>Overview</a>
+      <a href="{% url 'county_stats' %}" {% if request.resolver_match.url_name == 'county_stats' %}aria-current="page"{% endif %}>Counties</a>
+      <a href="{% url 'trends' %}" {% if request.resolver_match.url_name == 'trends' %}aria-current="page"{% endif %}>Trends</a>
+      <a href="{% url 'system_comparison' %}" {% if request.resolver_match.url_name == 'system_comparison' %}aria-current="page"{% endif %}>Systems</a>
+      <a href="{% url 'about' %}" {% if request.resolver_match.url_name == 'about' %}aria-current="page"{% endif %}>About</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'my_records' %}" {% if request.resolver_match.url_name == 'my_records' %}aria-current="page"{% endif %}>My data</a>
+        {# Django 5 requires POST for logout, so this is a form, not a link. #}
+        <form method="post" action="{% url 'logout' %}" style="display:inline">
+          {% csrf_token %}
+          <button type="submit" class="linkish">Sign out</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Sign in</a>
+        <a class="btn small" href="{% url 'register' %}">Contribute</a>
+      {% endif %}
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="shell">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="notice {% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warn{% endif %}" role="status">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="shell">
+    <span>Contributed anonymously by solar owners across Ireland.</span>
+    <a href="{% url 'about' %}">How the numbers are worked out</a>
+    <a href="{% url 'export_counties_csv' %}">Download the data (CSV)</a>
+    <a href="{% url 'stats_api' 'summary' %}">JSON API</a>
+  </div>
+</footer>
+
+<script src="{% static 'js/charts.js' %}" defer></script>
+<script src="{% static 'js/forms.js' %}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

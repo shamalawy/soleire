@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Irish solar generation, measured by the people who own it — soleire{% endblock %}
+
+{% block content %}
+<h1>What Irish solar actually produces</h1>
+<p class="lede">
+  Every figure here was reported by someone who owns the panels. Nothing is
+  modelled, nothing is estimated by a manufacturer, and nothing identifies a
+  household.
+</p>
+
+{% if not has_data %}
+  <div class="card empty-state">
+    <h2>No readings yet</h2>
+    <p>The dataset is empty. Once a handful of people file their first year, the county
+       tables and seasonality curves appear here automatically.</p>
+    <a class="btn" href="{% url 'register' %}">Be the first to contribute</a>
+  </div>
+{% else %}
+
+{% include "_partials/filters.html" %}
+
+<div class="grid cols-4" style="margin-bottom:1rem">
+  <div class="stat">
+    <div class="stat-value">{{ annual.annual_yield|default:"—" }}<span class="unit">kWh/kWp/yr</span></div>
+    <div class="stat-label">Annual yield</div>
+    <div class="stat-note">
+      {% if annual.year %}
+        {{ annual.year }}, from the {{ annual.systems }} system{{ annual.systems|pluralize }} that
+        reported all twelve months
+      {% else %}
+        No system has a complete year on record yet
+      {% endif %}
+    </div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ summary.systems|intcomma }}</div>
+    <div class="stat-label">Systems</div>
+    <div class="stat-note">{{ summary.contributors|intcomma }} contributor{{ summary.contributors|pluralize }} in {{ summary.counties }} count{{ summary.counties|pluralize:"y,ies" }}</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ summary.installed_capacity_kwp|floatformat:0|intcomma }}<span class="unit">kWp</span></div>
+    <div class="stat-label">Capacity reporting</div>
+    <div class="stat-note">Total array size across the dataset</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ summary.total_energy_kwh|floatformat:0|intcomma }}<span class="unit">kWh</span></div>
+    <div class="stat-label">Energy reported</div>
+    <div class="stat-note">
+      {{ summary.readings|intcomma }} monthly reading{{ summary.readings|pluralize }},
+      median {{ summary.median_monthly_yield }} kWh/kWp per month
+    </div>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <section class="card">
+    <h2>Through the year</h2>
+    <p class="muted" style="font-size:.9rem">
+      Output per kWp installed, month by month. Irish solar is heavily seasonal —
+      the summer peak typically runs six to eight times the December floor.
+    </p>
+    {% include "_partials/chart.html" with chart_data=trend_chart chart_id="trend-chart" chart_type="line" %}
+    <details class="data-table">
+      <summary>Show the figures behind this chart</summary>
+      <div class="table-wrap">
+        <table>
+          <caption>Monthly specific yield</caption>
+          <thead><tr><th scope="col">Month</th><th scope="col" class="num">kWh/kWp<br><span class="muted" style="font-weight:400;text-transform:none">that month</span></th><th scope="col" class="num">Systems</th></tr></thead>
+          <tbody>
+            {% for row in trend_chart.points %}
+              <tr {% if row.suppressed %}class="is-suppressed"{% endif %}>
+                <th scope="row">{{ row.label }}</th>
+                <td class="num">{{ row.value|default:"withheld" }}</td>
+                <td class="num">{{ row.systems|default:"—" }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <section class="card">
+    <h2>Best-performing counties</h2>
+    <p class="muted" style="font-size:.9rem">
+      Ranked by kWh per kWp per month, not by total output — otherwise this
+      would just show which counties have the most contributors.
+    </p>
+    {% include "_partials/chart.html" with chart_data=county_chart chart_id="county-chart" chart_type="bar" %}
+    <div class="table-wrap">
+      <table>
+        <caption>Top counties by specific yield</caption>
+        <thead><tr><th scope="col">County</th><th scope="col" class="num">kWh/kWp/mth</th><th scope="col" class="num">Systems</th></tr></thead>
+        <tbody>
+          {% for row in top_counties %}
+            <tr><th scope="row">{{ row.label }}</th><td class="num">{{ row.specific_yield }}</td><td class="num">{{ row.systems }}</td></tr>
+          {% empty %}
+            <tr><td colspan="3" class="muted">No county has enough contributors to publish yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% if hidden_county_count %}
+      <p class="muted" style="font-size:.85rem;margin-top:.6rem">
+        {{ hidden_county_count }} further count{{ hidden_county_count|pluralize:"y is,ies are" }} withheld —
+        too few contributors to publish without identifying them.
+      </p>
+    {% endif %}
+    <p style="margin-top:.8rem"><a href="{% url 'county_stats' %}">See the full county table →</a></p>
+  </section>
+</div>
+
+{% if seasons %}
+<section class="card" style="margin-top:1rem">
+  <h2>Where {{ seasons.0.year }}'s output fell</h2>
+  <p class="muted" style="font-size:.9rem">
+    Share of the year's kWh/kWp delivered in each meteorological season. One
+    calendar year only — mixing years would compare an uneven number of springs
+    and autumns and pass the result off as seasonality.
+  </p>
+  <div class="grid cols-4">
+    {% for season in seasons %}
+      <div class="stat">
+        <div class="stat-value">{{ season.share_pct }}<span class="unit">%</span></div>
+        <div class="stat-label">{{ season.label }}</div>
+        <div class="stat-note">{{ season.total_yield }} kWh/kWp over {{ season.months }} month{{ season.months|pluralize }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="card" style="margin-top:1rem">
+  <h2>Add your roof to the dataset</h2>
+  <p>
+    A year of monthly kWh figures from your inverter app is all it takes. In
+    return you get your own performance benchmarked against comparable systems
+    in your county — the thing no manufacturer's datasheet will tell you.
+  </p>
+  {% if user.is_authenticated %}
+    <a class="btn" href="{% url 'my_records' %}">Go to my data</a>
+  {% else %}
+    <div class="btn-row">
+      <a class="btn" href="{% url 'register' %}">Create an anonymous account</a>
+      <a class="btn secondary" href="{% url 'about' %}">What gets published?</a>
+    </div>
+  {% endif %}
+</section>
+
+{% include "_partials/suppression_note.html" %}
+{% endif %}
+{% endblock %}

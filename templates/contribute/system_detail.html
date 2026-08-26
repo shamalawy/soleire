@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}{{ system.label|default:"System" }} readings — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'my_records' %}">← My data</a></p>
+<h1>{{ system.label|default:"Unnamed system" }}</h1>
+<p class="lede">
+  {{ system.array_size_kwp }} kWp array · {{ system.inverter_size_kw }} kW inverter ·
+  {{ system.get_orientation_display }} · {{ system.county }}
+  {% if system.dc_ac_ratio %} · DC/AC ratio {{ system.dc_ac_ratio|floatformat:2 }}{% endif %}
+</p>
+
+{% if annual %}
+<section class="card">
+  <h2>By year</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Year</th><th scope="col" class="num">Months filed</th><th scope="col" class="num">Total kWh</th><th scope="col" class="num">kWh/kWp</th><th scope="col"></th></tr></thead>
+      <tbody>
+        {% for row in annual %}
+          <tr>
+            <th scope="row">{{ row.year }}</th>
+            <td class="num">{{ row.months }}/12</td>
+            <td class="num">{{ row.total_kwh|floatformat:0 }}</td>
+            <td class="num">{{ row.specific_yield|default:"—" }}</td>
+            <td><a href="{% url 'reading_bulk' system.pk %}?year={{ row.year }}">Edit year</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+<section class="card">
+  <h2>All readings</h2>
+  {% if years %}
+    <form method="get" class="filters" data-autosubmit>
+      <div class="field">
+        <label for="year-filter">Year</label>
+        <select id="year-filter" name="year">
+          <option value="">All years</option>
+          {% for year in years %}
+            <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn secondary" data-apply>Apply</button>
+    </form>
+  {% endif %}
+
+  <div class="table-wrap">
+    <table>
+      <caption>{{ page.paginator.count }} reading{{ page.paginator.count|pluralize }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Month</th><th scope="col">Year</th>
+          <th scope="col" class="num">kWh</th><th scope="col" class="num">kWh/kWp</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <th scope="row">{{ row.reading.get_month_display }}</th>
+            <td>{{ row.reading.year }}</td>
+            <td class="num">{{ row.reading.energy_generated_kwh }}</td>
+            <td class="num">{{ row.specific_yield|default:"—" }}</td>
+            <td>
+              <a href="{% url 'reading_edit' row.reading.pk %}">Edit</a> ·
+              <a href="{% url 'reading_delete' row.reading.pk %}">Delete</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="muted">No readings yet. <a href="{% url 'reading_bulk' system.pk %}">Enter a year</a>.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if page.paginator.num_pages > 1 %}
+    <nav class="pagination" aria-label="Pagination">
+      {% if page.has_previous %}
+        <a class="btn small secondary" href="?page={{ page.previous_page_number }}{% if selected_year %}&amp;year={{ selected_year }}{% endif %}">← Newer</a>
+      {% endif %}
+      <span class="muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+      {% if page.has_next %}
+        <a class="btn small secondary" href="?page={{ page.next_page_number }}{% if selected_year %}&amp;year={{ selected_year }}{% endif %}">Older →</a>
+      {% endif %}
+    </nav>
+  {% endif %}
+</section>
+
+<div class="btn-row">
+  <a class="btn" href="{% url 'reading_bulk' system.pk %}">Enter a year at once</a>
+  <a class="btn secondary" href="{% url 'reading_create' system.pk %}">Add a single month</a>
+  {% if page.paginator.count %}<a class="btn secondary" href="{% url 'benchmark' system.pk %}">Benchmark</a>{% endif %}
+  <a class="btn secondary" href="{% url 'system_edit' system.pk %}">Edit system</a>
+  <a class="muted" href="{% url 'system_delete' system.pk %}" style="margin-left:auto">Delete system</a>
+</div>
+{% endblock %}

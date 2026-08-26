@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Does orientation or size change your yield? — soleire{% endblock %}
+
+{% block content %}
+<h1>What actually affects yield</h1>
+<p class="lede">
+  The questions everyone asks before installing: does a south-facing roof really
+  win, does a bigger array give less per panel, does a battery change anything.
+  Here is what the community's own figures say.
+</p>
+
+{% include "_partials/filters.html" %}
+
+<section class="card">
+  <h2>By orientation</h2>
+  <p class="muted" style="font-size:.9rem">
+    kWh per kWp in an average month, so a large south-facing array and a small
+    east–west one are on equal footing. Orientations with too few contributors
+    are omitted.
+  </p>
+  {% include "_partials/chart.html" with chart_data=orientation_chart chart_id="orientation-chart" chart_type="bar" %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Orientation</th><th scope="col" class="num">kWh/kWp per month</th><th scope="col" class="num">Median</th><th scope="col" class="num">Systems</th></tr></thead>
+      <tbody>
+        {% for row in orientation %}
+          <tr {% if row.suppressed %}class="is-suppressed"{% endif %}>
+            <th scope="row">{{ row.label }}</th>
+            <td class="num">{{ row.specific_yield|default:"withheld" }}</td>
+            <td class="num">{{ row.median_yield|default:"—" }}</td>
+            <td class="num">{{ row.systems|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4" class="muted">No published orientations yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>By array size</h2>
+  <p class="muted" style="font-size:.9rem">
+    If the bands trend downwards, larger arrays are clipping at the inverter or
+    covering less favourable roof — worth knowing before over-specifying.
+  </p>
+  {% include "_partials/chart.html" with chart_data=size_chart chart_id="size-chart" chart_type="bar" %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Array size</th><th scope="col" class="num">kWh/kWp per month</th><th scope="col" class="num">Systems</th></tr></thead>
+      <tbody>
+        {% for row in size_bands %}
+          <tr {% if row.suppressed %}class="is-suppressed"{% endif %}>
+            <th scope="row">{{ row.label }}</th>
+            <td class="num">{{ row.specific_yield|default:"withheld" }}</td>
+            <td class="num">{{ row.systems|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <h2>With and without a battery</h2>
+  <p class="muted" style="font-size:.9rem">
+    A battery shifts <em>when</em> you use electricity, not how much the panels
+    generate, so these two rows should look alike. A large gap points at a data
+    quality problem rather than a real effect — which is why it is published.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Storage</th><th scope="col" class="num">kWh/kWp per month</th><th scope="col" class="num">Systems</th></tr></thead>
+      <tbody>
+        {% for row in battery %}
+          <tr {% if row.suppressed %}class="is-suppressed"{% endif %}>
+            <th scope="row">{{ row.label }}</th>
+            <td class="num">{{ row.specific_yield|default:"withheld" }}</td>
+            <td class="num">{{ row.systems|default:"—" }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3" class="muted">Not enough contributors have recorded storage yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% include "_partials/suppression_note.html" %}
+{% endblock %}

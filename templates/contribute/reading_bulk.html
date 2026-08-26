@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Enter a year of readings — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'system_detail' system.pk %}">← {{ system.label|default:"System" }}</a></p>
+<h1>Enter a year at once</h1>
+<p class="lede">
+  Open your inverter app's monthly view and copy the kWh across. Leave any month
+  blank if you do not have it — nothing is lost, and you can come back later.
+  Months you have already filed are pre-filled; changing one updates it.
+</p>
+
+<div class="card">
+  <form method="post" data-dirty-guard>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+      <div class="notice error" role="alert">
+        <ul class="errorlist">{% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
+
+    <div class="field" style="max-width:10rem">
+      {{ form.year.label_tag }}
+      {{ form.year }}
+      {% if form.year.errors %}<ul class="errorlist">{% for e in form.year.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    <fieldset style="border:0;padding:0;margin:0">
+      <legend class="visually-hidden">Monthly generation in kilowatt-hours</legend>
+      <div class="month-grid">
+        {% for field in form.month_fields %}
+          <div class="field">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.errors %}<ul class="errorlist">{% for e in field.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </fieldset>
+
+    <div class="btn-row">
+      <button type="submit" class="btn">Save this year</button>
+      <a class="btn secondary" href="{% url 'system_detail' system.pk %}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<p class="muted" style="margin-top:1rem">
+  Your system is {{ system.array_size_kwp }} kWp, so a plausible Irish year totals
+  roughly {{ system.array_size_kwp|floatformat:0 }} × 800–1,100 kWh. If a single month looks far
+  too big, check whether the app is reporting watt-hours.
+</p>
+{% endblock %}

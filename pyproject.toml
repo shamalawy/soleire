@@ -1,0 +1,48 @@
+# Tooling configuration. The project itself is not packaged — it is deployed as
+# a container image — so there is no [project] table.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+# Migrations are historical records: reformatting them creates diff noise on
+# files nobody reviews, for a schema that in the older ones no longer exists.
+extend-exclude = ["globalstats/migrations"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "UP",       # pyupgrade
+    "B",        # bugbear
+    "C4",       # comprehensions
+    "DJ",       # Django-specific
+    "RUF",
+]
+ignore = [
+    "E501",     # long lines are handled by the formatter
+    "RUF012",   # Django's class-level mutables (list_display etc.) are fine
+    # En dashes and similar are deliberate typography in the user-facing copy
+    # ("East–West", "Dec–Feb"), not homoglyph mistakes.
+    "RUF001", "RUF002", "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"globalstats/tests/*" = ["B008"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "soleir.settings"
+python_files = ["test_*.py"]
+testpaths = ["globalstats/tests"]
+addopts = "--strict-markers --disable-warnings"
+
+[tool.coverage.run]
+source = ["globalstats", "soleir"]
+omit = ["*/migrations/*", "*/tests/*", "*/wsgi.py", "*/asgi.py", "manage.py"]
+
+[tool.coverage.report]
+skip_empty = true
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:", "raise NotImplementedError"]

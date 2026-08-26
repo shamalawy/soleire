@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Confirm deletion — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<h1>Delete this?</h1>
+<div class="card" style="max-width:34rem">
+  <p><strong>{{ object_label }}</strong></p>
+  {% if detail %}<p class="muted">{{ detail }}</p>{% endif %}
+  <p>This cannot be undone.</p>
+  {# A POST form, not a link: the old templates deleted on GET, which any #}
+  {# link prefetcher or crawler could trigger. #}
+  <form method="post">
+    {% csrf_token %}
+    <div class="btn-row">
+      <button type="submit" class="btn danger">Yes, delete</button>
+      <a class="btn secondary" href="{{ cancel_url }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

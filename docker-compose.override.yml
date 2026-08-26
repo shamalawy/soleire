@@ -1,0 +1,29 @@
+# Development overrides — applied automatically by `docker compose up`.
+# For a production deploy use: docker compose -f docker-compose.yml up -d
+services:
+  db:
+    # Exposed so you can point psql or a GUI client at the container. The host
+    # side defaults to 55432 because a local Postgres on 5432 is common and
+    # the collision is a confusing first-run failure.
+    ports:
+      - "${POSTGRES_PORT_HOST:-55432}:5432"
+
+  web:
+    build:
+      args:
+        INSTALL_DEV: "true"
+    # Run as the host user so files the container writes into the bind mount
+    # (makemigrations output, coverage reports) are not owned by root or by the
+    # image's uid 10001. Set DOCKER_UID/DOCKER_GID in .env if yours are not 1000.
+    user: "${DOCKER_UID:-1000}:${DOCKER_GID:-1000}"
+    environment:
+      DJANGO_DEBUG: "true"
+    volumes:
+      # Live code reload: the source tree shadows the copy baked into the image.
+      - .:/app
+      # Keep the image's collected static files instead of the (empty) host dir.
+      - staticfiles:/app/staticfiles
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+volumes:
+  staticfiles:

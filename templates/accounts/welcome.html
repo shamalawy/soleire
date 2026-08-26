@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Save your handle — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<h1>Your account is ready</h1>
+
+<div class="card" style="max-width:40rem">
+  <p class="lede" style="margin-bottom:1rem">
+    This is the only identifier you have. Make sure it is somewhere safe before
+    you carry on.
+  </p>
+
+  <div class="field">
+    <label for="final-handle">Your handle</label>
+    <div class="handle-row">
+      <input type="text" id="final-handle" value="{{ handle }}" readonly
+             autocomplete="username" spellcheck="false" class="handle-input">
+      <button type="button" class="btn secondary"
+              data-copy-target="final-handle" data-copied-label="Copied">Copy</button>
+    </div>
+  </div>
+
+  <div class="notice warn" role="note">
+    <p style="margin-bottom:0">
+      There is no email address on this account and no password reset. Lose the
+      handle or the password and <strong>you lose access permanently</strong>.
+      Your readings would stay in the published statistics with no way for you to
+      change or remove them.
+    </p>
+  </div>
+
+  <h2>Where to put it</h2>
+  <ul>
+    <li>Let your browser save it when it offers — that keeps the handle and
+        password together.</li>
+    <li>Or add it to a password manager by hand, as the username.</li>
+    <li>Or write it on paper. It is two words and four digits precisely so that
+        it survives being written down and typed back.</li>
+  </ul>
+
+  <div class="btn-row">
+    <a class="btn" href="{% url 'system_create' %}">I have saved it — add my system</a>
+  </div>
+</div>
+{% endblock %}

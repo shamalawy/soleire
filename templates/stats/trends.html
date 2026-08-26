@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Seasonality and year-on-year trends — soleire{% endblock %}
+
+{% block content %}
+<h1>Trends over time</h1>
+<p class="lede">
+  Irish solar is defined by its seasonality. These charts show how sharply, and
+  whether one year genuinely beat another.
+</p>
+
+{% include "_partials/filters.html" with show_county=True %}
+
+<section class="card">
+  <h2>Month by month{% if selected_county %} — {{ selected_county }}{% endif %}</h2>
+  {% include "_partials/chart.html" with chart_data=trend_chart chart_id="trend-chart" chart_type="line" %}
+  <details class="data-table">
+    <summary>Show the figures</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th scope="col">Period</th><th scope="col" class="num">kWh/kWp per month</th><th scope="col" class="num">Total kWh</th><th scope="col" class="num">Systems</th></tr></thead>
+        <tbody>
+          {% for row in series %}
+            <tr {% if row.suppressed %}class="is-suppressed"{% endif %}>
+              <th scope="row">{{ row.label }}</th>
+              <td class="num">{{ row.specific_yield|default:"withheld" }}</td>
+              <td class="num">{{ row.total_energy_kwh|floatformat:0|default:"—" }}</td>
+              <td class="num">{{ row.systems|default:"—" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4" class="muted">No published periods for this selection.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<section class="card">
+  <h2>Year against year</h2>
+  <p class="muted" style="font-size:.9rem">
+    Each line is one calendar year, overlaid on the same twelve months. Gaps are
+    periods with too few contributors to publish.
+  </p>
+  {% include "_partials/chart.html" with chart_data=year_on_year chart_id="yoy-chart" chart_type="line" %}
+  <div class="table-wrap" style="margin-top:.8rem">
+    <table>
+      <caption>Specific yield (kWh/kWp) by month</caption>
+      <thead>
+        <tr>
+          <th scope="col">Year</th>
+          {% for label in year_on_year.labels %}<th scope="col" class="num">{{ label }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in year_on_year.series %}
+          <tr>
+            <th scope="row">{{ row.name }}</th>
+            {% for value in row.values %}<td class="num">{{ value|default:"—" }}</td>{% endfor %}
+          </tr>
+        {% empty %}
+          <tr><td colspan="13" class="muted">Not enough published data yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if seasons %}
+<section class="card">
+  <h2>Share of output by season, {{ seasons.0.year }}</h2>
+  <div class="grid cols-4">
+    {% for season in seasons %}
+      <div class="stat">
+        <div class="stat-value">{{ season.share_pct }}<span class="unit">%</span></div>
+        <div class="stat-label">{{ season.label }}</div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<p class="btn-row">
+  <a class="btn secondary" href="{% url 'export_monthly_csv' %}?{{ request.GET.urlencode }}">Download (CSV)</a>
+</p>
+{% include "_partials/suppression_note.html" %}
+{% endblock %}

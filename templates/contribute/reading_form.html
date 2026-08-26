@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}Add a reading{% else %}Edit reading{% endif %} — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'system_detail' system.pk %}">← {{ system.label|default:"System" }}</a></p>
+<h1>{% if is_new %}Add a monthly reading{% else %}Edit reading{% endif %}</h1>
+<div class="card" style="max-width:32rem">
+  <form method="post" data-dirty-guard>
+    {% csrf_token %}
+    {% include "_partials/form.html" %}
+    <div class="btn-row">
+      <button type="submit" class="btn">Save</button>
+      <a class="btn secondary" href="{% url 'system_detail' system.pk %}">Cancel</a>
+    </div>
+  </form>
+</div>
+<p class="muted" style="margin-top:1rem">
+  Filing a whole year? <a href="{% url 'reading_bulk' system.pk %}">Use the twelve-month form</a> instead.
+</p>
+{% endblock %}

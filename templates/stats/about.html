@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}How soleire works — methodology and privacy{% endblock %}
+
+{% block content %}
+<h1>How this works</h1>
+
+<section class="card">
+  <h2>What the numbers mean</h2>
+  <p>
+    The headline metric is <strong>specific yield</strong> — kilowatt-hours
+    generated per kilowatt-peak installed, written kWh/kWp. It is the only way
+    to compare a 2 kWp array on a Galway bungalow with a 12 kWp array on a
+    Wicklow barn. A bucket's figure is the total energy reported divided by the
+    total capacity behind it, so each system counts in proportion to its size.
+  </p>
+  <p>
+    Alongside it we publish the <strong>median</strong>, computed in the database
+    with <code>percentile_cont</code>. Where the mean and the median diverge
+    sharply, a few unusual systems are pulling the average and the median is the
+    more honest number.
+  </p>
+  <p>
+    Two different units appear on the site and it matters which is which.
+    <strong>kWh/kWp per month</strong> is what almost every table shows: total
+    energy over total capacity across whatever months are in the selection.
+    <strong>kWh/kWp per year</strong> is computed only from systems that filed
+    all twelve months of a given year — never by multiplying a monthly average
+    by twelve, which would badly flatter anyone who only recorded the summer.
+    {% if annual.year %}
+      For {{ annual.year }} that annual figure rests on
+      {{ annual.systems }} complete system-year{{ annual.systems|pluralize }}.
+    {% endif %}
+  </p>
+  <p>
+    Raw kWh totals are shown too, but they mostly measure how many people from a
+    county happened to sign up. They are not county-wide generation figures and
+    should not be read as such.
+  </p>
+</section>
+
+<section class="card">
+  <h2>What is published, and what never is</h2>
+  <p>
+    An aggregate appears only when at least <strong>{{ min_group_size }}</strong>
+    distinct systems belonging to <strong>{{ min_group_size }}</strong> distinct
+    contributors sit behind it. Below that threshold the bucket is listed as
+    withheld, with no figure. This stops a county with one solar owner from
+    effectively publishing that household's monthly electricity profile.
+  </p>
+  <p>Never published, anywhere on the public site:</p>
+  <ul>
+    <li>Handles or any account detail — and there are no email addresses or
+        names to publish in the first place.</li>
+    <li>An individual system's readings, or anything that resolves to one system.</li>
+    <li>Anything finer-grained than a county — no addresses, no Eircodes, no coordinates.</li>
+  </ul>
+  <p class="muted">
+    Stated plainly: threshold suppression defeats casual re-identification. It is
+    not a formal privacy guarantee, and someone who diffs snapshots of this site
+    over time as contributors join could narrow things down. If that matters to
+    you, do not contribute.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Why there is a login at all</h2>
+  <p>
+    It sits awkwardly with the word "anonymous", so it is worth being direct: the
+    account exists so you can correct or delete your own figures later, and so a
+    single person cannot stuff the dataset. But it is built to hold nothing
+    about you.
+  </p>
+  <p>
+    <strong>You do not choose a username.</strong> Given the chance, people type
+    a name they already use elsewhere, and that one field would tie a household
+    to its electricity profile. The site issues a handle instead — two words and
+    four digits, like <code>bright-heron-4712</code> — generated at random and
+    derived from nothing about you. <strong>There is no email field at all.</strong>
+  </p>
+  <p>
+    Your password is stored as an Argon2id hash, the memory-hard algorithm that
+    won the Password Hashing Competition, never as the password itself.
+  </p>
+  <p>
+    The consequence is worth stating plainly: because we hold no way to contact
+    or identify you, <strong>there is no password reset</strong>. Lose the handle
+    or the password and access is gone permanently, for you and for us. Readings
+    you already contributed stay in the published aggregates with no way for you
+    to change or withdraw them. While you do have access, you can export
+    everything you have contributed, or delete the account and every reading with
+    it, from your own dashboard.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Readings we exclude</h2>
+  <p>
+    A monthly figure implying more than 250 kWh per kWp is physically impossible
+    in Ireland — the whole country manages roughly 800–1,100 kWh/kWp in a
+    <em>year</em>. Such rows are almost always watt-hours entered as
+    kilowatt-hours, or a mistyped array size, and one of them can distort a
+    county average badly. They stay in your own records but are excluded from
+    every published aggregate.
+  </p>
+  <div class="grid cols-3">
+    <div class="stat">
+      <div class="stat-value">{{ quality.total_readings }}</div>
+      <div class="stat-label">Readings held</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ quality.published_readings }}</div>
+      <div class="stat-label">Used in statistics</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ quality.excluded_pct }}<span class="unit">%</span></div>
+      <div class="stat-label">Excluded as implausible</div>
+      <div class="stat-note">{{ quality.excluded_readings }} reading{{ quality.excluded_readings|pluralize }}</div>
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Take the data</h2>
+  <p>
+    The aggregates are yours. CSV and JSON carry exactly what the pages show,
+    suppression already applied.
+  </p>
+  <ul>
+    <li><a href="{% url 'export_counties_csv' %}">County table (CSV)</a></li>
+    <li><a href="{% url 'export_monthly_csv' %}">Monthly series (CSV)</a></li>
+    <li><code>/api/stats/&lt;dataset&gt;/</code> — <a href="{% url 'stats_api' 'summary' %}">summary</a>,
+      <a href="{% url 'stats_api' 'counties' %}">counties</a>,
+      <a href="{% url 'stats_api' 'provinces' %}">provinces</a>,
+      <a href="{% url 'stats_api' 'monthly' %}">monthly</a>,
+      <a href="{% url 'stats_api' 'year-on-year' %}">year-on-year</a>,
+      <a href="{% url 'stats_api' 'orientation' %}">orientation</a>,
+      <a href="{% url 'stats_api' 'size-bands' %}">size-bands</a>,
+      <a href="{% url 'stats_api' 'battery' %}">battery</a>,
+      <a href="{% url 'stats_api' 'seasons' %}">seasons</a>
+    </li>
+  </ul>
+</section>
+{% endblock %}

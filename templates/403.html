@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Not allowed — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="card empty-state">
+  <h1>Not allowed</h1>
+  <p>You do not have access to that. If you were signing in, your session may
+     have expired — try again.</p>
+  <a class="btn" href="{% url 'login' %}">Sign in</a>
+</div>
+{% endblock %}

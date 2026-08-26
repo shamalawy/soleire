@@ -1,0 +1,23 @@
+{# Deliberately standalone: if something is broken badly enough to reach here, #}
+{# rendering base.html (context processors, template tags) may fail too.       #}
+<!DOCTYPE html>
+<html lang="en-IE">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Something went wrong — soleire</title>
+<style>
+  body { font: 16px/1.6 system-ui, sans-serif; margin: 0; background: #f7f8f6; color: #1d2419; }
+  @media (prefers-color-scheme: dark) { body { background: #12150f; color: #e8ece3; } }
+  .box { max-width: 34rem; margin: 4rem auto; padding: 0 1.2rem; }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>Something went wrong</h1>
+  <p>The error has been logged. Nothing you submitted was lost — try again in a moment.</p>
+  <p><a href="/">Back to the statistics</a></p>
+</div>
+</body>
+</html>

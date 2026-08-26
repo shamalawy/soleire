@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: soleire
+          POSTGRES_USER: soleire
+          POSTGRES_PASSWORD: ci-not-a-real-secret
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U soleire"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      DJANGO_SECRET_KEY: ci-only-key-not-used-anywhere-real
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      POSTGRES_DB: soleire
+      POSTGRES_USER: soleire
+      POSTGRES_PASSWORD: ci-not-a-real-secret
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: "5432"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Check for missing migrations
+        run: python manage.py makemigrations --check --dry-run
+
+      - name: Deployment checklist
+        run: python manage.py check --deploy --fail-level ERROR
+
+      - name: Test
+        run: coverage run -m pytest && coverage report
+
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the production image
+        run: docker build --target runtime -t soleire:ci .
+      - name: The image must boot and answer the health check
+        run: |
+          docker run -d --name soleire-smoke \
+            -e DJANGO_SECRET_KEY=ci-only-key \
+            -e DJANGO_DEBUG=false \
+            -e DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1 \
+            -e DJANGO_MIGRATE_ON_START=false \
+            -e DJANGO_DB_WAIT_TIMEOUT=1 \
+            soleire:ci || true
+          # No database here, so the entrypoint is expected to exit non-zero.
+          # What matters is that it failed for the right reason. Docker's log
+          # driver is asynchronous, so poll rather than reading once.
+          for _ in $(seq 1 30); do
+            if docker logs soleire-smoke 2>&1 | grep -q "waiting for the database"; then
+              echo "entrypoint reached the database wait — image boots correctly"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "entrypoint never reached the database wait; logs were:" >&2
+          docker logs soleire-smoke 2>&1 >&2
+          exit 1

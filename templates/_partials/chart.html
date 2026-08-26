@@ -1,0 +1,9 @@
+{% comment %}
+Chart holder. The payload goes out through `json_script`, which HTML-escapes
+it properly; nothing is interpolated into a <script> body. The chart itself is
+aria-hidden because the table beside it carries the same numbers.
+{% endcomment %}
+{{ chart_data|json_script:chart_id }}
+<div class="chart" data-chart="{{ chart_id }}" data-chart-type="{{ chart_type|default:'bar' }}">
+  <noscript><p class="chart-empty">The chart needs JavaScript. The table below has the same figures.</p></noscript>
+</div>

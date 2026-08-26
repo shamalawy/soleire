@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Sign in — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<h1>Sign in</h1>
+<p class="lede">Use the handle the site issued you, not an email address.</p>
+<div class="card" style="max-width:32rem">
+  <form method="post">
+    {% csrf_token %}
+    {% include "_partials/form.html" %}
+    <input type="hidden" name="next" value="{{ next }}">
+    <div class="btn-row">
+      <button type="submit" class="btn">Sign in</button>
+      <a class="btn secondary" href="{% url 'register' %}">Create an account</a>
+    </div>
+  </form>
+</div>
+<div class="notice warn" style="max-width:32rem;margin-top:1rem">
+  <p style="margin-bottom:0">
+    <strong>There is no password reset.</strong> The site holds no email address
+    for you and no other way to confirm who you are, so a lost handle or password
+    cannot be recovered by anyone — including us. That is the price of an account
+    that carries nothing about you.
+  </p>
+</div>
+<p class="muted">
+  Your handle looks like <code>bright-heron-4712</code>. Check your browser's
+  saved passwords if you cannot find it.
+</p>
+{% endblock %}

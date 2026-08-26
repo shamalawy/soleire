@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Solar generation by county — soleire{% endblock %}
+
+{% block content %}
+<h1>County league table</h1>
+<p class="lede">
+  How much a kilowatt-peak of panels actually delivers, county by county.
+  {% if selected_month %}Showing one month.{% else %}Showing an average month across the selection.{% endif %}
+</p>
+
+{% include "_partials/filters.html" with show_month=True show_metric=True %}
+
+{% if annual_summary and annual_summary.annual_yield %}
+  <div class="notice">
+    <p style="margin:0">
+      Across the {{ annual_summary.systems }} system{{ annual_summary.systems|pluralize }} that reported every
+      month of {{ annual_summary.year }}, the typical yield was
+      <strong>{{ annual_summary.annual_yield|floatformat:0 }} kWh per kWp</strong> for the year
+      (median {{ annual_summary.median_annual_yield|floatformat:0 }};
+      middle half {{ annual_summary.p25|floatformat:0 }}–{{ annual_summary.p75|floatformat:0 }}).
+      Everything else on this page is a per-month figure.
+    </p>
+  </div>
+{% endif %}
+
+{% if published %}
+  <section class="card">
+    <h2>{% if selected_metric == 'total' %}Total energy reported{% else %}Specific yield{% endif %}</h2>
+    {% include "_partials/chart.html" with chart_data=chart chart_id="county-chart" chart_type="bar" %}
+  </section>
+
+  <section class="card">
+    <div class="table-wrap">
+      <table>
+        <caption>
+          {{ published|length }} count{{ published|length|pluralize:"y,ies" }} published.
+          Ranked by {% if selected_metric == 'total' %}total kWh{% else %}kWh per kWp per month{% endif %}.
+          {% if show_annual %}The annual column counts only systems that reported all twelve months of {{ selected_year }}.{% endif %}
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">County</th>
+            <th scope="col">Province</th>
+            {% if show_annual %}<th scope="col" class="num">kWh/kWp per year</th>{% endif %}
+            <th scope="col" class="num">kWh/kWp per month</th>
+            <th scope="col" class="num">Median per month</th>
+            <th scope="col" class="num">Total kWh</th>
+            <th scope="col" class="num">Systems</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in published %}
+            <tr>
+              <td class="num muted">{{ forloop.counter }}</td>
+              <th scope="row">{{ row.label }}</th>
+              <td class="muted">{{ row.group|default:"—" }}</td>
+              {% if show_annual %}<td class="num"><strong>{{ row.annual_yield|default:"—" }}</strong></td>{% endif %}
+              <td class="num">{{ row.specific_yield|default:"—" }}</td>
+              <td class="num">{{ row.median_yield|default:"—" }}</td>
+              <td class="num">{{ row.total_energy_kwh|floatformat:0 }}</td>
+              <td class="num">{{ row.systems }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% else %}
+  <div class="card empty-state">
+    <h2>Nothing to publish yet</h2>
+    <p>No county has reached {{ min_group_size }} contributors for this selection. Try
+       "All years", or help by <a href="{% url 'register' %}">adding your own system</a>.</p>
+  </div>
+{% endif %}
+
+{% if provinces %}
+<section class="card">
+  <h2>By province</h2>
+  <p class="muted" style="font-size:.9rem">
+    A coarser grouping, which lets counties that are individually too sparse to
+    publish still contribute to a figure.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th scope="col">Province</th><th scope="col" class="num">kWh/kWp per month</th><th scope="col" class="num">Systems</th><th scope="col" class="num">Contributors</th></tr></thead>
+      <tbody>
+        {% for row in provinces %}
+          <tr {% if row.suppressed %}class="is-suppressed"{% endif %}>
+            <th scope="row">{{ row.label }}</th>
+            <td class="num">{{ row.specific_yield|default:"withheld" }}</td>
+            <td class="num">{{ row.systems|default:"—" }}</td>
+            <td class="num">{{ row.contributors|default:"—" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endif %}
+
+{% if withheld or no_data %}
+<section class="card">
+  <h2>What is missing, and why</h2>
+  {% if withheld %}
+    <p><strong>Withheld ({{ withheld|length }}):</strong>
+      {% for row in withheld %}{{ row.label }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+      These have readings, but fewer than {{ min_group_size }} contributors, so publishing a
+      figure could single someone out.</p>
+  {% endif %}
+  {% if no_data %}
+    <p><strong>No readings at all ({{ no_data|length }}):</strong>
+      {% for row in no_data %}{{ row.label }}{% if not forloop.last %}, {% endif %}{% endfor %}.
+      Listed so the gaps in the map are visible rather than implied.</p>
+  {% endif %}
+</section>
+{% endif %}
+
+<p class="btn-row">
+  <a class="btn secondary" href="{% url 'export_counties_csv' %}?{{ request.GET.urlencode }}">Download this table (CSV)</a>
+  <a class="btn secondary" href="{% url 'stats_api' 'counties' %}?{{ request.GET.urlencode }}">As JSON</a>
+</p>
+
+{% include "_partials/suppression_note.html" %}
+{% endblock %}

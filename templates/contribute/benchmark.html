@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}How my system compares — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<p class="muted"><a href="{% url 'system_detail' system.pk %}">← {{ system.label|default:"System" }}</a></p>
+<h1>How your system compares</h1>
+<p class="lede">
+  {{ system.array_size_kwp }} kWp, {{ system.get_orientation_display }}, {{ system.county }} —
+  measured against everyone else's figures for {{ selected_year }}, on a
+  per-kWp basis so array size does not distort the comparison.
+</p>
+
+{% if years|length > 1 %}
+  <form method="get" class="filters" data-autosubmit>
+    <div class="field">
+      <label for="bench-year">Year</label>
+      <select id="bench-year" name="year">
+        {% for year in years %}
+          <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn secondary" data-apply>Apply</button>
+  </form>
+{% endif %}
+
+{% if report %}
+  <div class="grid cols-4" style="margin-bottom:1rem">
+    <div class="stat">
+      <div class="stat-value">{{ report.own_annual_yield }}<span class="unit">kWh/kWp</span></div>
+      <div class="stat-label">Your yield</div>
+      <div class="stat-note">summed over the {{ report.months_reported }} month{{ report.months_reported|pluralize }} you reported — not a full year unless all twelve are in</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ report.county_annual_yield|default:"—" }}<span class="unit">kWh/kWp</span></div>
+      <div class="stat-label">{{ system.county }}</div>
+      <div class="stat-note">
+        {% if report.vs_county_pct is not None %}
+          <span class="delta {% if report.vs_county_pct >= 0 %}up{% else %}down{% endif %}">
+            {% if report.vs_county_pct >= 0 %}+{% endif %}{{ report.vs_county_pct }}% vs your county
+          </span>
+        {% else %}
+          Too few contributors in {{ system.county }} yet
+        {% endif %}
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ report.national_annual_yield|default:"—" }}<span class="unit">kWh/kWp</span></div>
+      <div class="stat-label">All Ireland</div>
+      <div class="stat-note">
+        {% if report.vs_national_pct is not None %}
+          <span class="delta {% if report.vs_national_pct >= 0 %}up{% else %}down{% endif %}">
+            {% if report.vs_national_pct >= 0 %}+{% endif %}{{ report.vs_national_pct }}% vs everyone
+          </span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">{{ report.total_energy_kwh|floatformat:0 }}<span class="unit">kWh</span></div>
+      <div class="stat-label">Your total</div>
+      <div class="stat-note">in {{ selected_year }}</div>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Month by month</h2>
+    {% include "_partials/chart.html" with chart_data=chart chart_id="benchmark-chart" chart_type="line" %}
+    <div class="table-wrap" style="margin-top:.8rem">
+      <table>
+        <caption>Specific yield, kWh per kWp</caption>
+        <thead>
+          <tr>
+            <th scope="col">Month</th>
+            <th scope="col" class="num">Your kWh</th>
+            <th scope="col" class="num">You</th>
+            <th scope="col" class="num">{{ system.county }}</th>
+            <th scope="col" class="num">All Ireland</th>
+            <th scope="col" class="num">vs county</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for month in report.months %}
+            <tr>
+              <th scope="row">{{ month.label }}</th>
+              <td class="num">{{ month.energy_kwh }}</td>
+              <td class="num">{{ month.own_yield }}</td>
+              <td class="num">{{ month.county_yield|default:"—" }}</td>
+              <td class="num">{{ month.national_yield|default:"—" }}</td>
+              <td class="num">
+                {% if month.vs_county_pct is not None %}
+                  <span class="delta {% if month.vs_county_pct >= 0 %}up{% else %}down{% endif %}">
+                    {% if month.vs_county_pct >= 0 %}+{% endif %}{{ month.vs_county_pct }}%
+                  </span>
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:.87rem;margin-top:.7rem">
+      Dashes mean that month did not have {{ min_group_size }} contributors behind it, so
+      there is no peer figure to compare against. A gap in the chart means the
+      same. Comparing a partial year against a full one is not meaningful — the
+      annual figures above only sum the months you actually reported.
+    </p>
+  </section>
+{% else %}
+  <div class="card empty-state">
+    <h2>Nothing to compare yet</h2>
+    <p>File some readings for {{ selected_year }} first.</p>
+    <a class="btn" href="{% url 'reading_bulk' system.pk %}">Enter a year</a>
+  </div>
+{% endif %}
+{% endblock %}

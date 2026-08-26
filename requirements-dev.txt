@@ -1,0 +1,8 @@
+# Development / CI dependencies. Installed on top of requirements.txt by the
+# Docker build when INSTALL_DEV=true (which docker-compose.override.yml sets).
+-r requirements.txt
+
+pytest>=8.3,<9
+pytest-django>=4.9,<5
+coverage>=7.6
+ruff>=0.7

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}Register a system{% else %}Edit system{% endif %} — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<h1>{% if is_new %}Register your system{% else %}Edit system{% endif %}</h1>
+<p class="lede">
+  These details never appear publicly on their own — they decide which county
+  and which comparison group your readings contribute to.
+</p>
+
+<div class="grid cols-2">
+  <div class="card">
+    <form method="post" data-dirty-guard>
+      {% csrf_token %}
+      {% include "_partials/form.html" %}
+      <div class="btn-row">
+        <button type="submit" class="btn">{% if is_new %}Register system{% else %}Save changes{% endif %}</button>
+        <a class="btn secondary" href="{% if system %}{% url 'system_detail' system.pk %}{% else %}{% url 'my_records' %}{% endif %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Where to find these numbers</h2>
+    <p><strong>Array size (kWp)</strong> — on your installation certificate, or
+       panel wattage × number of panels ÷ 1000. Twelve 400 W panels is 4.8 kWp.</p>
+    <p><strong>Inverter size (kW)</strong> — the model number usually contains it
+       (a "SolarEdge SE5000" is 5 kW). Not the same as the array size.</p>
+    <p><strong>Orientation</strong> — the direction the panel faces, not the
+       direction of your front door. Split arrays have their own options.</p>
+  </div>
+</div>
+{% endblock %}

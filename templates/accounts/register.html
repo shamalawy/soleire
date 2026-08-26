@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Get an anonymous handle — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% block content %}
+<h1>Get your anonymous handle</h1>
+<p class="lede">
+  We do not ask for a name, an email address, or anything else. The site issues
+  you a handle; you choose a password. That is the whole account.
+</p>
+
+<div class="grid cols-2">
+  <div class="card">
+    {# One form, so the browser's password manager captures the handle and the #}
+    {# password together as a single credential.                                #}
+    <form method="post" data-credential-form>
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <div class="notice error" role="alert">
+          <ul class="errorlist">
+            {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+
+      <div class="field">
+        <label for="generated-handle">Your handle</label>
+        {# readonly, and the server ignores whatever is submitted here — the    #}
+        {# authoritative value comes from the session. The name and autocomplete #}
+        {# attributes exist so password managers recognise it as the username.   #}
+        <div class="handle-row">
+          <input type="text"
+                 id="generated-handle"
+                 name="username"
+                 value="{{ handle }}"
+                 readonly
+                 autocomplete="username"
+                 spellcheck="false"
+                 aria-describedby="handle-help"
+                 class="handle-input">
+          <button type="button"
+                  class="btn secondary"
+                  data-copy-target="generated-handle"
+                  data-copied-label="Copied">Copy</button>
+        </div>
+        <span class="helptext" id="handle-help">
+          Generated for you, and not derived from anything about you. Reload the
+          page if you would rather have a different one.
+        </span>
+      </div>
+
+      <div class="field">
+        {{ form.password1.label_tag }}
+        {{ form.password1 }}
+        {% if form.password1.help_text %}<span class="helptext">{{ form.password1.help_text }}</span>{% endif %}
+        {% if form.password1.errors %}
+          <ul class="errorlist">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        {{ form.password2.label_tag }}
+        {{ form.password2 }}
+        {% if form.password2.errors %}
+          <ul class="errorlist">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="notice warn" role="note">
+        <p><strong>Save both of these now.</strong> Let your browser store them
+           when it offers, or write the handle down somewhere you will still have
+           it in a year.</p>
+        <p style="margin-bottom:0">
+          We hold no email address and no other way to reach you. If you lose the
+          handle or the password, <strong>your access is gone permanently</strong> —
+          nobody can restore it, us included, and the readings you contributed
+          stay in the statistics with no way to edit or withdraw them.
+        </p>
+      </div>
+
+      <div class="field checkbox-field">
+        <label for="{{ form.saved_credentials.id_for_label }}">
+          {{ form.saved_credentials }}
+          <span>{{ form.saved_credentials.label }}</span>
+        </label>
+        {% if form.saved_credentials.errors %}
+          <ul class="errorlist">{% for e in form.saved_credentials.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="btn-row">
+        <button type="submit" class="btn">Create my account</button>
+        <a class="btn secondary" href="{% url 'login' %}">I already have a handle</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>Why you do not pick your own name</h2>
+    <p>
+      Given a username box, most people type something they already use — their
+      own name, a work handle, the front half of their email. One field like that
+      would tie a household to its electricity profile and undo the point of the
+      whole dataset. So the site issues the handle instead, and never asks you
+      for anything else.
+    </p>
+    <h2>What we store</h2>
+    <ul>
+      <li>Your handle, which means nothing on its own.</li>
+      <li>Your password, hashed with Argon2id — never the password itself.</li>
+      <li>The readings you file, published only as county aggregates.</li>
+    </ul>
+    <p>No email, no name, no address, no IP logging tied to your account.</p>
+    <p><a href="{% url 'about' %}">The full methodology and privacy stance →</a></p>
+  </div>
+</div>
+{% endblock %}

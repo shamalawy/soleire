@@ -1,0 +1,48 @@
+{% comment %}
+Statistics filter bar. Values are validated by StatsFilterForm before they
+reach a query — the previous version dropped ?month= straight into a filter
+and into the page heading.
+{% endcomment %}
+<form method="get" class="filters" data-autosubmit aria-label="Filter the statistics">
+  <div class="field">
+    <label for="filter-year">Year</label>
+    <select id="filter-year" name="year">
+      <option value="">All years</option>
+      {% for year in available_years %}
+        <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  {% if show_month %}
+    <div class="field">
+      <label for="filter-month">Month</label>
+      <select id="filter-month" name="month">
+        <option value="">Whole year</option>
+        {% for value, label in months %}
+          <option value="{{ value }}" {% if value == selected_month %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  {% endif %}
+  {% if show_county %}
+    <div class="field">
+      <label for="filter-county">County</label>
+      <select id="filter-county" name="county">
+        <option value="">All of Ireland</option>
+        {% for county in counties %}
+          <option value="{{ county }}" {% if county == selected_county %}selected{% endif %}>{{ county }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  {% endif %}
+  {% if show_metric %}
+    <div class="field">
+      <label for="filter-metric">Rank by</label>
+      <select id="filter-metric" name="metric">
+        <option value="yield" {% if selected_metric == 'yield' %}selected{% endif %}>kWh per kWp installed</option>
+        <option value="total" {% if selected_metric == 'total' %}selected{% endif %}>Total kWh reported</option>
+      </select>
+    </div>
+  {% endif %}
+  <button type="submit" class="btn secondary" data-apply>Apply</button>
+</form>

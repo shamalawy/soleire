@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Delete your account — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<h1>Delete your account</h1>
+<div class="card" style="max-width:36rem">
+  <div class="notice error" role="alert">
+    <p><strong>This cannot be undone.</strong> Deleting removes
+       {{ counts.systems }} system{{ counts.systems|pluralize }} and
+       {{ counts.readings }} reading{{ counts.readings|pluralize }}, and your
+       contribution disappears from every published aggregate.</p>
+  </div>
+  <p>
+    Want a copy first? <a href="{% url 'export_my_data' %}">Download everything as CSV</a>.
+  </p>
+  <form method="post">
+    {% csrf_token %}
+    <div class="field">
+      <label for="confirm">Type <strong>{{ user.get_username }}</strong> to confirm</label>
+      <input type="text" id="confirm" name="confirm" autocomplete="off" required>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn danger">Delete my account and all my data</button>
+      <a class="btn secondary" href="{% url 'my_records' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Page not found — soleire{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+{% block content %}
+<div class="card empty-state">
+  <h1>That page is not here</h1>
+  <p>The link may be out of date, or the record may have been deleted by its owner.</p>
+  <a class="btn" href="{% url 'home' %}">Back to the statistics</a>
+</div>
+{% endblock %}
